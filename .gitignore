@@ -1,5 +1,6 @@
 __pycache__/
 judge/*
 responses/*
+tasks-unused/*
 !judge/__init__.py
 !responses/__init__.py
