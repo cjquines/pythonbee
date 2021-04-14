@@ -9,17 +9,7 @@ Outputting either a string or an integer is acceptable.
 def f(n):
     return "".join(f"{a}{b}" for a, b in zip(range(1, n+1), range(n, 0, -1)))
 
-tests_ = [1, 4, 10, 32, 100]
+tests = [1, 4, 10, 32, 100]
 
-def tests(test_f):
-    tot_passed = 0
-    for inp in tests_:
-        tout, jout = str(test_f(inp)), f(inp)
-        verdict = tout == jout
-        tot_passed += verdict
-
-        print(f"{'OK' if verdict else 'WRONG'}: {inp}")
-        print(f"   test: {tout}")
-        print(f"  judge: {jout}")
-        print("")
-    print(f"passed {tot_passed} out of {len(tests)}")
+def checker(inp, tout, jout):
+    return str(tout) == jout

@@ -7,7 +7,7 @@ Both the input and output strings must be non-empty and consist of at most 100 l
 def f(s):
     return ('a' if s[0] != 'a' else 'b') + s[1:]
 
-tests_ = [
+tests = [
     "asdfghwer",
     "jksdfhgiqweadfasdf",
     "b",
@@ -18,12 +18,11 @@ tests_ = [
     "rereqqqpjadsf"
 ]
 
-def tests(test_f):
-    score = 0
-    for s in tests_:
-        res = test_f(s)
-        verdict = res.isalpha() and res.islower() and res != s and len(res) == len(s)
-        score += verdict
-        print(f"{'OK' if verdict else 'WRONG'}: {s}")
-        print(f"   test: {res}")
-    print(f"passed {score} out of {len(tests_)}")
+def checker(inp, tout):
+    conds = [
+        tout.isalpha(),
+        tout.islower(),
+        tout != inp,
+        len(tout) == len(inp)
+    ]
+    return all(conds)
