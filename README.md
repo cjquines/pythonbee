@@ -10,7 +10,7 @@ how to run a python bee:
 
 - write [the tasks](https://github.com/cjquines/pythonbee/tree/master/tasks). the filename should be `roundnumber-puzzletitle.py`. the format should be a triple-quoted string with the problem description, followed by the judge's solution, followed by the tests.
 
-- the given judge assumes that the task is to always write a function named `f`. the tests should be a list of inputs to the function that will be compared against both the judge's solution and the contestant's solution, although sometimes you might need to add [a custom checker](https://github.com/cjquines/pythonbee/blob/master/tasks/1-unequal.py).
+- the given judge assumes that the task is to always write a function named `f`. the tests should be a list of inputs to the function that will be compared against both the judge's solution and the contestant's solution. the checker will inspect the signature of `f`. if it takes in more than one argument, it will splat the input before passing it to `f`. it also supports [custom checkers](https://github.com/cjquines/pythonbee/blob/master/tasks-2021/1-unequal.py).
 
 - once you're done writing the tasks, run `gen.py` to generate the files. this will generate files in the `judge` folder and the `responses` folder.
 
