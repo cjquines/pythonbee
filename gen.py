@@ -1,4 +1,4 @@
-import itertools, os, shutil, subprocess
+import itertools, os, shutil
 
 def copy(inpf, outf):
     shutil.copy(inpf, os.path.join("judge", outf))
@@ -14,9 +14,13 @@ def copy(inpf, outf):
                     fout.write("\n")
                     return
 
-for r, fs in itertools.groupby(sorted(os.listdir("tasks")), key=lambda t: t[0]):
-    for i, f in enumerate(fs):
-        for k in "01":
-            inpf = os.path.join("tasks", f)
-            outf = f"{r}{i}{k}.py"
-            copy(inpf, outf)
+def main(tasks):
+    for r, fs in itertools.groupby(tasks, key=lambda t: t[0]):
+        for i, f in enumerate(fs):
+            for k in "01":
+                inpf = os.path.join("tasks", f)
+                outf = f"{r}{i}{k}.py"
+                copy(inpf, outf)
+
+if __name__ == "__main__":
+    main(sorted(os.listdir("tasks")))
