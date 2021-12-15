@@ -1,6 +1,8 @@
 __pycache__/
 judge/*
 responses/*
-tasks-unused/*
+tasks-*/*
+!tasks-2021/*
+!tasks-2021-5/*
 !judge/__init__.py
 !responses/__init__.py
