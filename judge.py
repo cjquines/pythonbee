@@ -1,3 +1,4 @@
+import copy
 import enum
 import multiprocessing
 import importlib
@@ -10,7 +11,7 @@ try:
 
     cprint = termcolor.cprint
 except:
-    cprint = print
+    cprint = lambda x, y: print(x)
 
 VERBOSE = False
 TIMEOUT = 1
@@ -43,9 +44,9 @@ def judge_case(inp, proc, checker, jout):
             verdict = checker(inp, tout)
         else:
             verdict = checker(inp, tout, jout)
-        return (Verdict.OK if verdict else Verdict.WA, tout)
+        return Verdict.OK if verdict else Verdict.WA, tout
     except:
-        return (Verdict.PE, tout)
+        return Verdict.PE, tout
 
 
 def print_data(data):
@@ -64,9 +65,10 @@ def judge(test_f, judge_f, tests, checker, to_splat=False):
     tot_passed = 0
     with multiprocessing.Pool() as pool:
         for inp in tests:
-            proc = pool.apply_async(test_f, inp if to_splat else (inp,))
+            jinp, tinp = copy.deepcopy(inp), copy.deepcopy(inp)
+            proc = pool.apply_async(test_f, tinp if to_splat else (tinp,))
             if judge_f:
-                jout = judge_f(*inp) if to_splat else judge_f(inp)
+                jout = judge_f(*jinp) if to_splat else judge_f(jinp)
             else:
                 jout = None
             verdict, tout = judge_case(inp, proc, checker, jout)
