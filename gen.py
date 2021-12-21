@@ -15,6 +15,7 @@ def copy(inpf, outf):
                     return
 
 def main(tasks):
+    tasks = filter(lambda t: t[0].isdigit(), tasks)
     for r, fs in itertools.groupby(tasks, key=lambda t: t[0]):
         for i, f in enumerate(fs):
             for k in "01":
@@ -23,4 +24,7 @@ def main(tasks):
                 copy(inpf, outf)
 
 if __name__ == "__main__":
+    for file in os.scandir("judge"):
+        if file.name.rstrip(".py").isdigit():
+            os.remove(file)
     main(sorted(os.listdir("tasks")))
