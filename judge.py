@@ -11,7 +11,7 @@ try:
     import termcolor
 
     cprint = termcolor.cprint
-except:
+except ImportError:
     cprint = lambda x, y: print(x)
 
 VERBOSE = False
@@ -19,8 +19,11 @@ TIMEOUT = 1
 Verdict = enum.Enum("Verdict", "OK WA TL RE PE CE")
 
 
-def n_args(f):
-    parameters = inspect.signature(f).parameters.items()
+def n_args(func):
+    """
+    Return (min_args, max_args) of input function.
+    """
+    parameters = inspect.signature(func).parameters.items()
     nondefault = lambda param: param.default == inspect.Parameter.empty
     min_args = len([name for name, param in parameters if nondefault(param)])
     max_args = len(parameters)
@@ -28,17 +31,24 @@ def n_args(f):
 
 
 def compatible(test_f, judge_f):
+    """
+    Return if judge_f inputs can be called on test_f.
+    """
     min_test, max_test = n_args(test_f)
     min_judge, max_judge = n_args(judge_f)
     return min_test <= min_judge <= max_judge <= max_test
 
 
 def judge_case(inp, proc, checker, jout):
+    """
+    Judge a thread given by proc, return (Verdict, output).
+    """
     try:
         tout = proc.get(TIMEOUT)
     except multiprocessing.TimeoutError:
         return Verdict.TL, None
-    except:
+    except Exception as exc:
+        # cprint(exc, "red")
         return Verdict.RE, None
     try:
         if n_args(checker)[1] <= 2:
@@ -46,11 +56,15 @@ def judge_case(inp, proc, checker, jout):
         else:
             verdict = checker(inp, tout, jout)
         return Verdict.OK if verdict else Verdict.WA, tout
-    except:
+    except Exception as exc:
+        # cprint(exc, "red")
         return Verdict.PE, tout
 
 
 def print_data(data):
+    """
+    Format the data to fit in terminal, clipping if needed.
+    """
     # 7 becuase "judge: " is 6 chars, then -1
     cols = shutil.get_terminal_size().columns - 7
     out = str(data)
@@ -61,6 +75,10 @@ def print_data(data):
 
 
 def judge(test_f, judge_f, tests, checker, to_splat=False):
+    """
+    Compare test_f to judge_f; set to_splat if f should take multiple args.
+    Return the score.
+    """
     if judge_f:
         to_splat = n_args(judge_f)[1] > 1
     tot_passed = 0
@@ -87,36 +105,58 @@ def judge(test_f, judge_f, tests, checker, to_splat=False):
                 print(f"judge: {print_data(jout)}")
             print("")
     print(f"passed {tot_passed} out of {len(tests)}")
+    return tot_passed
 
 
-def main(test_f, jf):
-    get_jf = lambda attr: getattr(jf, attr, None)
-    checker = get_jf("checker")
-    judge_f = get_jf("f")
-    tests = get_jf("tests")
+def parse_length(test_file):
+    """
+    Return the length of contestant's program.
+    """
+    with open(f"responses/{test_file}.py", encoding="UTF-8") as file:
+        length = 0
+        count = 0
+        for line in file.readlines():
+            if count >= 2:
+                length += len(line)
+            if line.strip() == '"""':
+                count += 1
+    print(f"program length {length}")
+    return length
+
+
+def main(test_file, test_mod, judge_mod):
+    """
+    Return score and program length. test_mod and judge_mod should be modules.
+    """
+    get_func = lambda module, attr: getattr(module, attr, None)
+    test_f = get_func(test_mod, "f")
+    checker = get_func(judge_mod, "checker")
+    judge_f = get_func(judge_mod, "f")
+    tests = get_func(judge_mod, "tests")
 
     if checker and not callable(checker):
         raise Exception("expected checker to be callable")
-    elif checker and n_args(checker)[0] == 1:
-        checker(test_f)
+    if checker and n_args(checker)[0] == 1:
+        score = int(checker(test_f))
     elif not tests:
         raise Exception("expected to have tests")
     elif checker:
-        judge(test_f, judge_f, tests, checker)
+        score = judge(test_f, judge_f, tests, checker)
     elif not judge_f:
         raise Exception("expected to have judge f")
     else:
-        judge(test_f, judge_f, tests, lambda _, tout, jout: tout == jout)
+        score = judge(test_f, judge_f, tests, lambda _, tout, jout: tout == jout)
 
-    try:
-        length = len(inspect.getsource(test_f))
-    except:
-        length = 0
-    print(f"program length {length}")
+    length = parse_length(test_file)
+    return score, length
 
 
 if __name__ == "__main__":
-    file = sys.argv[1]
-    test_f = getattr(importlib.import_module(f"responses.{file}"), "f", None)
-    judge_file = importlib.import_module(f"judge.{file}")
-    main(test_f, judge_file)
+    test_file = sys.argv[1]
+    try:
+        test_mod = importlib.import_module(f"responses.{test_file}")
+    except Exception as exc:
+        # cprint(exc, "red")
+        test_mod = None
+    judge_mod = importlib.import_module(f"judge.{test_file}")
+    main(test_file, test_mod, judge_mod)
