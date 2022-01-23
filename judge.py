@@ -89,29 +89,33 @@ def judge(test_f, judge_f, tests, checker, to_splat=False):
 
 
 def main(test_f, jf):
-    get_jf = lambda attr: getattr(jf, attr) if hasattr(jf, attr) else None
+    get_jf = lambda attr: getattr(jf, attr, None)
     checker = get_jf("checker")
     judge_f = get_jf("f")
     tests = get_jf("tests")
 
     if checker and not callable(checker):
         raise Exception("expected checker to be callable")
-    if checker and n_args(checker)[0] == 1:
-        return checker(test_f)
-    if not tests:
+    elif checker and n_args(checker)[0] == 1:
+        checker(test_f)
+    elif not tests:
         raise Exception("expected to have tests")
-    if checker:
-        return judge(test_f, judge_f, tests, checker)
-    if not judge_f:
+    elif checker:
+        judge(test_f, judge_f, tests, checker)
+    elif not judge_f:
         raise Exception("expected to have judge f")
-    return judge(test_f, judge_f, tests, lambda _, tout, jout: tout == jout)
+    else:
+        judge(test_f, judge_f, tests, lambda _, tout, jout: tout == jout)
+
+    try:
+        length = len(inspect.getsource(test_f))
+    except:
+        length = 0
+    print(f"program length {length}")
 
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    try:
-        test_f = importlib.import_module("responses." + file).f
-    except:
-        test_f = None
-    judge_file = importlib.import_module("judge." + file)
+    test_f = getattr(importlib.import_module(f"responses.{file}"), "f", None)
+    judge_file = importlib.import_module(f"judge.{file}")
     main(test_f, judge_file)
