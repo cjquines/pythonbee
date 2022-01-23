@@ -1,6 +1,7 @@
 import copy
 import enum
 import multiprocessing
+import multiprocessing.dummy
 import importlib
 import inspect
 import shutil
@@ -63,7 +64,7 @@ def judge(test_f, judge_f, tests, checker, to_splat=False):
     if judge_f:
         to_splat = n_args(judge_f)[1] > 1
     tot_passed = 0
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.dummy.Pool() as pool:
         for inp in tests:
             jinp, tinp = copy.deepcopy(inp), copy.deepcopy(inp)
             proc = pool.apply_async(test_f, tinp if to_splat else (tinp,))
