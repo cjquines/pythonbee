@@ -14,13 +14,13 @@ how to run a python bee:
 
 - once you're done writing the tasks, run `gen.py` to generate the files. this will generate files in the `judge` folder and the `responses` folder.
 
-- *optional:* run `judge.py` to make `results.md`. in that file, write a list of kerbs of contestants. then run `judge.py` again to generate matchups.
+- *optional:* run `bracket.py` to make `results.md`. in that file, write a list of kerbs of contestants. then run `bracket.py` again to generate matchups.
 
 - contestants write their code in the corresponding files in the `responses` folder. the filenames are of the form `123.py`, where `1` is the round number, `2` is the problem number, and `3` is the contestant number; these are intentionally nondescript file names.
 
 - run `judge.py 123` to run the tests for `responses/123.py`.
 
-- *optional:* at the end of a round, add a list of kerbs of contestants in the next round below the line, and run `judge.py` again.
+- *optional:* at the end of a round, add a list of kerbs of contestants in the next round below the line, and run `bracket.py` again.
 
 this is sketchy infra i am accepting PRs
 
