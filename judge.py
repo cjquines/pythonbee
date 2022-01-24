@@ -1,9 +1,10 @@
 import copy
 import enum
-import multiprocessing
-import multiprocessing.dummy
 import importlib
 import inspect
+import multiprocessing
+import multiprocessing.dummy
+import random
 import shutil
 import sys
 
@@ -61,7 +62,7 @@ def judge_case(inp, proc, checker, jout):
         return Verdict.PE, tout
 
 
-def print_data(data):
+def format_data(data):
     """
     Format the data to fit in terminal, clipping if needed.
     """
@@ -74,7 +75,7 @@ def print_data(data):
     return out
 
 
-def judge(test_f, judge_f, tests, checker, to_splat=False):
+def judge_cases(test_f, judge_f, tests, checker, to_splat=False):
     """
     Compare test_f to judge_f; set to_splat if f should take multiple args.
     Return the score.
@@ -96,13 +97,13 @@ def judge(test_f, judge_f, tests, checker, to_splat=False):
             passed = verdict == Verdict.OK
             tot_passed += passed
             cprint(
-                f"   {str(verdict)[-2:]}: {print_data(inp)}",
+                f"   {str(verdict)[-2:]}: {format_data(inp)}",
                 "green" if passed else "red",
             )
             if tout is not None:
-                print(f" test: {print_data(tout)}")
+                print(f" test: {format_data(tout)}")
             if jout is not None:
-                print(f"judge: {print_data(jout)}")
+                print(f"judge: {format_data(jout)}")
             print("")
     print(f"passed {tot_passed} out of {len(tests)}")
     return tot_passed
@@ -124,7 +125,7 @@ def parse_length(test_file):
     return length
 
 
-def main(test_file, test_mod, judge_mod):
+def judge(test_file, test_mod, judge_mod):
     """
     Return score and program length. test_mod and judge_mod should be modules.
     """
@@ -141,22 +142,59 @@ def main(test_file, test_mod, judge_mod):
     elif not tests:
         raise Exception("expected to have tests")
     elif checker:
-        score = judge(test_f, judge_f, tests, checker)
+        score = judge_cases(test_f, judge_f, tests, checker)
     elif not judge_f:
         raise Exception("expected to have judge f")
     else:
-        score = judge(test_f, judge_f, tests, lambda _, tout, jout: tout == jout)
+        score = judge_cases(test_f, judge_f, tests, lambda _, tout, jout: tout == jout)
 
     length = parse_length(test_file)
     return score, length
 
 
-if __name__ == "__main__":
-    test_file = sys.argv[1]
+def main(test_file):
+    """
+    Judge a test_file, assuming it exists.
+    """
     try:
         test_mod = importlib.import_module(f"responses.{test_file}")
     except Exception as exc:
         # cprint(exc, "red")
         test_mod = None
     judge_mod = importlib.import_module(f"judge.{test_file}")
-    main(test_file, test_mod, judge_mod)
+    score, length = judge(test_file, test_mod, judge_mod)
+    return score, length
+
+
+def write_bracket():
+    """
+    Write next bracket for results.md; fails silently.
+    """
+    with open("results.md", "a+", encoding="UTF-8") as file:
+        pass  # create if does not exist
+    with open("results.md", "r", encoding="UTF-8") as file:
+        kerbs = []
+        for line in reversed(file.readlines()):
+            if set(line.strip()) == {"-"}:
+                break
+            kerbs.append(line.strip())
+        kerbs = list(filter(None, kerbs))
+        random.shuffle(kerbs)
+    if not kerbs:
+        return
+    max_len = max(len(kerb) for kerb in kerbs)
+    with open("results.md", "a", encoding="UTF-8") as file:
+        while len(kerbs) > 1:
+            line = " vs. ".join(
+                f"{kerbs.pop().ljust(max_len)}"
+                for _ in range(3 if len(kerbs) == 3 else 2)
+            ).strip()
+            file.write("\n" + line + "\n")
+        file.write("\n" + "-" * 34 + "\n")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        main(sys.argv[1])
+    else:
+        write_bracket()
